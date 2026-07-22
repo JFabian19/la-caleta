@@ -7,14 +7,15 @@ import { DEFAULT_MENU_DATA } from './data/menuData';
 // ==========================================
 // 📋 CONFIGURACIÓN DE LA PLANTILLA DEL MENÚ
 // ==========================================
-const RESTAURANTE_NAME = "Snack Tutti Frutti";
-const RESTAURANTE_SLOGAN = "Snack y Juguería Tropical";
-const WHATSAPP_NUMBER = "51942661467"; // Reemplaza con tu número de WhatsApp con código de país
-const FACEBOOK_URL = "";
-const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Puesto+E16+-+Interior+Mercado+2+-+Tarapoto";
-const LOGO_FOOTER_PATH = "/logo_tutti_frutti.png"; // Reemplaza con la ruta de tu logo en public/
-const BANNER_PATH = "/tropical_banner.png"; // Reemplaza con la ruta de tu banner en public/
-const MARQUEE_TEXT = "🍓 JUGOS FRESCOS Y NATURALES • 🌴 SABOR TROPICAL DESDE TARAPOTO • ¡PRUEBA NUESTROS ANTOJITOS DE LA SELVA! 🍍🍹 • ";
+const RESTAURANTE_NAME = "La Caleta Restaurant Marisquería";
+const RESTAURANTE_SLOGAN = "El mejor sabor del mar y la selva";
+const WHATSAPP_NUMBER = "51988132003"; // Número de WhatsApp para recibir los pedidos
+const FACEBOOK_URL = "https://facebook.com/La Caleta Marisqueria";
+const MAPS_URL = "";
+const LOGO_FOOTER_PATH = "/header_logo.png";
+const BANNER_PATH = "/banner.jpg";
+const MARQUEE_TEXT = "🌊 EL VERDADERO SABOR DEL MAR A TU MESA • CEVICHES, RONDAS Y FUSIÓN AMAZÓNICA • ¡HAZ TU PEDIDO CALETA YA! 🦐🍋 • ";
+const COPY_BOTON_CUMPLEANOS = "¡Celebra a lo grande! 🥳 Registra tu cumpleaños aquí y recibe una cortesía marina para festejar tu día. 🦀🎁";
 // ==========================================
 
 // Mapa de imágenes locales por defecto para platos conocidos (vacío por defecto para la plantilla)
@@ -245,10 +246,20 @@ export default function App() {
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen relative shadow-2xl overflow-hidden flex flex-col font-sans">
-      <header className="sticky top-0 bg-white/95 backdrop-blur-md z-50 px-5 py-4 flex justify-between items-center border-b border-gray-100">
-        <div className="flex flex-col items-start">
-          <h1 className="font-title text-[28px] text-primary leading-none tracking-wide">{RESTAURANTE_NAME}</h1>
-          <span className="font-slogan text-[11px] text-secondary font-bold tracking-wider mt-0.5">{RESTAURANTE_SLOGAN}</span>
+      <header className="sticky top-0 bg-white/95 backdrop-blur-md z-50 px-5 py-3 flex justify-between items-center border-b border-gray-100 shadow-sm">
+        <div className="flex items-center gap-3">
+          {LOGO_FOOTER_PATH ? (
+            <img 
+              src={LOGO_FOOTER_PATH} 
+              alt={RESTAURANTE_NAME} 
+              className="h-14 w-auto object-contain drop-shadow-sm" 
+            />
+          ) : (
+            <div className="flex flex-col items-start">
+              <h1 className="font-title text-[28px] text-primary leading-none tracking-wide">{RESTAURANTE_NAME}</h1>
+              <span className="font-slogan text-[11px] text-secondary font-bold tracking-wider mt-0.5">{RESTAURANTE_SLOGAN}</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {FACEBOOK_URL && (
@@ -305,20 +316,30 @@ export default function App() {
           }}
           transition={{ repeat: Infinity, duration: 1.5 }}
           onClick={() => setShowBirthdayForm(true)}
-          className="w-full bg-gradient-to-r from-yellow-500 via-secondary to-amber-500 text-white py-3 px-4 rounded-2xl flex items-center justify-center gap-2 font-bold text-[10px] sm:text-[11px] uppercase tracking-wide border border-yellow-400 relative overflow-hidden group text-center"
+          className="w-full bg-gradient-to-r from-secondary via-amber-600 to-primary text-white py-3 px-4 rounded-2xl flex items-center justify-center gap-2 font-bold text-[10px] sm:text-[11px] uppercase tracking-wide border border-yellow-400 relative overflow-hidden group text-center"
         >
           <div className="absolute inset-0 shimmer opacity-30 mix-blend-overlay"></div>
           <Gift size={18} className="animate-bounce shrink-0" />
-          <span>¡Ponle sabor y color a tu cumpleaños! 🍓 <span className="text-yellow-100 font-black underline">Regístrate aquí</span> y llévate un batido Tutti Frutti de cortesía para celebrar de forma tropical. 🥤🎁</span>
+          <span>{COPY_BOTON_CUMPLEANOS}</span>
         </motion.button>
       </div>
 
       <div className="px-5 pt-4 pb-3">
-        <div className="relative w-full rounded-3xl overflow-hidden shadow-xl aspect-[2/1] bg-gradient-to-br from-primary/10 to-secondary/15 flex flex-col items-center justify-center text-center p-4 border border-dashed border-primary/20">
-          <p className="font-dish font-bold text-primary text-sm uppercase tracking-wider">
-            aca va a imagen
-          </p>
-        </div>
+        {BANNER_PATH ? (
+          <div className="relative w-full rounded-3xl overflow-hidden shadow-xl aspect-[16/9] sm:aspect-[2/1] border border-gray-100">
+            <img 
+              src={BANNER_PATH} 
+              alt={RESTAURANTE_NAME} 
+              className="w-full h-full object-cover" 
+            />
+          </div>
+        ) : (
+          <div className="relative w-full rounded-3xl overflow-hidden shadow-xl aspect-[2/1] bg-gradient-to-br from-primary/10 to-secondary/15 flex flex-col items-center justify-center text-center p-4 border border-dashed border-primary/20">
+            <p className="font-dish font-bold text-primary text-sm uppercase tracking-wider">
+              aca va a imagen
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="px-5 py-3 overflow-x-auto no-scrollbar">
@@ -408,9 +429,13 @@ export default function App() {
 
         <footer className="mt-8 pt-8 pb-10 border-t border-gray-200 flex flex-col items-center justify-center">
           <p className="font-title text-2xl text-primary mb-4">{RESTAURANTE_NAME}</p>
-          <div className="w-32 h-32 mb-6 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center text-center p-2">
-            <span className="font-dish font-bold text-[10px] text-primary uppercase tracking-wide">aca va a imagen</span>
-          </div>
+          {LOGO_FOOTER_PATH ? (
+            <img src={LOGO_FOOTER_PATH} alt={RESTAURANTE_NAME} className="w-32 h-auto mb-6 object-contain drop-shadow-md" />
+          ) : (
+            <div className="w-32 h-32 mb-6 rounded-2xl border border-dashed border-primary/30 bg-primary/5 flex items-center justify-center text-center p-2">
+              <span className="font-dish font-bold text-[10px] text-primary uppercase tracking-wide">aca va a imagen</span>
+            </div>
+          )}
           <p className="text-[11px] text-gray-400 font-medium">© 2026 Todos los derechos reservados.</p>
         </footer>
 
