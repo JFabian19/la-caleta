@@ -3,6 +3,8 @@ export interface Dish {
   descripcion?: string;
   imagen?: string;
   precio: string;
+  isDrink?: boolean;
+  disponible?: boolean;
 }
 
 export interface Category {
@@ -14,7 +16,7 @@ export interface Category {
 export const DEFAULT_MENU_DATA: Category[] = [
   {
     id: "ceviches",
-    nombre: "Ceviches",
+    nombre: "Ceviches y Causas",
     items: [
       { nombre: "Ceviche de Toyo", descripcion: "", precio: "S/. 25.00", imagen: "" },
       { nombre: "Ceviche Mixto", descripcion: "", precio: "S/. 30.00", imagen: "" },
@@ -23,12 +25,21 @@ export const DEFAULT_MENU_DATA: Category[] = [
       { nombre: "Leche de Tigre Simple", descripcion: "", precio: "S/. 15.00", imagen: "" },
       { nombre: "Leche de Tigre Mega Especial", descripcion: "", precio: "S/. 20.00", imagen: "" },
       { nombre: "Leche de Pantera", descripcion: "", precio: "S/. 25.00", imagen: "" },
-      { nombre: "Papa Huancaina + Ceviche", descripcion: "", precio: "S/. 10.00", imagen: "" },
+      { nombre: "Papa Huancaína + Ceviche", descripcion: "", precio: "S/. 10.00", imagen: "" },
       { nombre: "Papa Rellena + Ceviche", descripcion: "", precio: "S/. 10.00", imagen: "" },
       { nombre: "Tortilla de Choclo + Ceviche", descripcion: "", precio: "S/. 15.00", imagen: "" },
       { nombre: "Causa Acevichada", descripcion: "", precio: "S/. 20.00", imagen: "" },
       { nombre: "Causa Montada", descripcion: "", precio: "S/. 25.00", imagen: "" },
+      { nombre: "Causa con Lomo Saltado", descripcion: "Causa rellena acompañada de un jugoso lomo saltado", precio: "S/. 25.00", imagen: "" },
       { nombre: "Canastitas Mixtas/Ceviche y Cecina", descripcion: "", precio: "S/. 25.00", imagen: "" }
+    ]
+  },
+  {
+    id: "pastas-y-saltados",
+    nombre: "Pastas y Saltados",
+    items: [
+      { nombre: "Fetuccini con Lomo Saltado", descripcion: "Deliciosos fetuccinis a la crema con lomo saltado tradicional", precio: "S/. 32.00", imagen: "" },
+      { nombre: "Lomo Saltado", descripcion: "Finos cortes de carne salteados al wok con cebolla, tomate y papas fritas", precio: "S/. 28.00", imagen: "" }
     ]
   },
   {
@@ -85,9 +96,29 @@ export const DEFAULT_MENU_DATA: Category[] = [
     nombre: "Sábados y Domingos",
     items: [
       { nombre: "Cuy Frito con Papas Guisadas", descripcion: "", precio: "S/. 25.00", imagen: "" },
-      { nombre: "Carne Seca con ...", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "" },
+      { nombre: "Carne Seca con ...", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", disponible: false },
       { nombre: "Pato Guisado", descripcion: "", precio: "S/. 20.00", imagen: "" },
       { nombre: "Arroz con Pato", descripcion: "", precio: "S/. 20.00", imagen: "" }
+    ]
+  },
+  {
+    id: "bebidas",
+    nombre: "Bebidas",
+    items: [
+      { nombre: "Refresco de chicha o maracuyá", descripcion: "1 litro", precio: "S/. 15.00", imagen: "/bebidas/chicha_jarra.png", isDrink: true, disponible: true },
+      { nombre: "Refresco de chicha o maracuyá", descripcion: "1/2 litro", precio: "S/. 8.00", imagen: "/bebidas/chicha_jarra.png", isDrink: true, disponible: true },
+      { nombre: "Chicha morada frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
+      { nombre: "Maracuyá frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
+      { nombre: "Limonada frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
+      { nombre: "Gaseosa", descripcion: "3 litros", precio: "S/. 18.00", imagen: "/bebidas/gaseosa_3l.png", isDrink: true, disponible: true },
+      { nombre: "Gaseosa", descripcion: "1 litro", precio: "S/. 10.00", imagen: "/bebidas/gaseosa_1l.png", isDrink: true, disponible: true },
+      { nombre: "Gaseosa gordita", descripcion: "", precio: "S/. 6.00", imagen: "/bebidas/gaseosa_gordita.png", isDrink: true, disponible: true },
+      { nombre: "Gaseosa", descripcion: "1/2 litro", precio: "S/. 5.00", imagen: "/bebidas/gaseosa_medio_litro.png", isDrink: true, disponible: true },
+      { nombre: "Agua mineral", descripcion: "", precio: "S/. 4.00", imagen: "", isDrink: true, disponible: true },
+      { nombre: "Cerveza Corona", descripcion: "", precio: "S/. 8.00", imagen: "", isDrink: true, disponible: true },
+      { nombre: "Cerveza Cristal", descripcion: "", precio: "S/. 10.00", imagen: "", isDrink: true, disponible: true },
+      { nombre: "Cerveza negra", descripcion: "", precio: "S/. 12.00", imagen: "", isDrink: true, disponible: true },
+      { nombre: "Cerveza de trigo", descripcion: "", precio: "S/. 12.00", imagen: "", isDrink: true, disponible: true }
     ]
   }
 ];

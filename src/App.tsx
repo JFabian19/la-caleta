@@ -11,7 +11,7 @@ const RESTAURANTE_NAME = "La Caleta Restaurant Marisquería";
 const RESTAURANTE_SLOGAN = "El mejor sabor del mar y la selva";
 const WHATSAPP_NUMBER = "51988132003"; // Número de WhatsApp para recibir los pedidos
 const FACEBOOK_URL = "https://facebook.com/La Caleta Marisqueria";
-const MAPS_URL = "";
+const MAPS_URL = "https://maps.app.goo.gl/pad21wxLXwTA8Ygc7";
 const LOGO_FOOTER_PATH = "/header_logo.png";
 const BANNER_PATH = "/banner.jpg";
 const MARQUEE_TEXT = "🌊 EL VERDADERO SABOR DEL MAR A TU MESA • CEVICHES, RONDAS Y FUSIÓN AMAZÓNICA • ¡HAZ TU PEDIDO CALETA YA! 🦐🍋 • ";
@@ -28,6 +28,8 @@ interface Dish {
   descripcion?: string;
   imagen?: string;
   precio: string;
+  isDrink?: boolean;
+  disponible?: boolean;
 }
 
 interface Category {
@@ -40,6 +42,7 @@ interface CartItem {
   nombre: string;
   precio: string;
   cantidad: number;
+  isDrink?: boolean;
 }
 
 export default function App() {
@@ -105,7 +108,8 @@ export default function App() {
               nombre: d['nombre del plato'],
               descripcion: d.descripción,
               precio: d.precio,
-              imagen: LOCAL_IMAGES[d['nombre del plato']] || d['URL de imagen'] || null
+              imagen: LOCAL_IMAGES[d['nombre del plato']] || d['URL de imagen'] || null,
+              isDrink: c.nombre.toLowerCase().includes('bebida')
             }))
         }));
 
@@ -129,7 +133,8 @@ export default function App() {
 
   const cartCount = useMemo(() => cart.reduce((acc, item) => acc + item.cantidad, 0), [cart]);
 
-  const addToCart = (dish: Dish) => {
+  const addToCart = (dish: Dish, categoryIsDrink?: boolean) => {
+    const isDrink = categoryIsDrink || dish.isDrink || false;
     setCart(prev => {
       const existing = prev.find(i => i.nombre === dish.nombre && i.precio === dish.precio);
       if (existing) {
@@ -139,7 +144,7 @@ export default function App() {
             : i
         );
       }
-      return [...prev, { nombre: dish.nombre, precio: dish.precio, cantidad: 1 }];
+      return [...prev, { nombre: dish.nombre, precio: dish.precio, cantidad: 1, isDrink }];
     });
   };
 
@@ -157,21 +162,44 @@ export default function App() {
     );
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return cart.reduce((acc, item) => {
-      const cleanPrice = item.precio.replace(/^[^\d]*/, '');
+      const cleanPrice = item.precio.replace(/^[^\d.]*/g, '').replace(/,/g, '.');
       const num = parseFloat(cleanPrice) || 0;
       return acc + num * item.cantidad;
     }, 0);
   };
 
+  const calculateDishesCount = () => {
+    return cart.reduce((acc, item) => item.isDrink ? acc : acc + item.cantidad, 0);
+  };
+
+  const calculateEnvaseFee = () => {
+    return calculateDishesCount() * 1.00;
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() + calculateEnvaseFee();
+  };
+
   const sendToWhatsApp = () => {
+    const subtotal = calculateSubtotal();
+    const dishesCount = calculateDishesCount();
+    const envaseFee = calculateEnvaseFee();
     const total = calculateTotal();
+
     let message = `*Hola ${RESTAURANTE_NAME}, deseo realizar un pedido:*\n\n`;
     cart.forEach(item => {
       message += `• ${item.cantidad} x ${item.nombre} (${item.precio})\n`;
     });
-    message += `\n*TOTAL: S/.${total.toFixed(2)}*`;
+    
+    if (envaseFee > 0) {
+      message += `\n📦 *Costo de envase (${dishesCount} plato${dishesCount > 1 ? 's' : ''}):* S/.${envaseFee.toFixed(2)}`;
+    }
+
+    message += `\n*TOTAL A PAGAR: S/.${total.toFixed(2)}*`;
+    message += `\n\n📌 *Nota de envío:* Si la dirección es cercana a nuestro local, el envío es GRATIS. Si la dirección es alejada, se aplicará un costo de envío adicional.`;
+
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
@@ -373,43 +401,66 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              {cat.items.map((dish, idx) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ y: -4 }}
-                  className="bg-white rounded-[2rem] overflow-hidden flex flex-col shadow-sm border border-gray-100 hover:border-primary/30 hover:shadow-md transition-all duration-200"
-                >
-                  <div className="bg-primary/5 aspect-square flex items-center justify-center relative overflow-hidden p-4 border-b border-gray-100">
-                    <span className="font-dish font-bold text-[11px] text-primary uppercase tracking-wider text-center">
-                      aca va a imagen
-                    </span>
-                  </div>
-                  
-                  <div className="p-4 flex flex-col flex-1">
-                    <h4 className="font-dish font-bold text-dark text-[13px] leading-tight mb-1">
-                      {dish.nombre}
-                    </h4>
-                    {dish.descripcion && (
-                      <p className="text-[10px] text-gray-400 leading-tight mb-2 line-clamp-3">
-                        {dish.descripcion}
-                      </p>
-                    )}
-                    <div className="flex-1"></div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="font-dish font-bold text-primary text-[16px] whitespace-nowrap">
-                        {dish.precio}
-                      </span>
-                      <motion.button
-                        whileTap={{ scale: 0.8 }}
-                        onClick={() => addToCart(dish)}
-                        className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary transition-colors duration-200 shrink-0"
-                      >
-                        <Plus size={16} strokeWidth={3} />
-                      </motion.button>
+              {cat.items.map((dish, idx) => {
+                const isUnavailable = dish.disponible === false || dish.precio?.toLowerCase().includes('no disponible');
+                return (
+                  <motion.div
+                    key={idx}
+                    whileHover={isUnavailable ? {} : { y: -4 }}
+                    className={`bg-white rounded-[2rem] overflow-hidden flex flex-col shadow-sm border border-gray-100 transition-all duration-200 ${
+                      isUnavailable ? 'opacity-60 border-gray-200' : 'hover:border-primary/30 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="bg-primary/5 aspect-square flex items-center justify-center relative overflow-hidden border-b border-gray-100">
+                      {dish.imagen ? (
+                        <img 
+                          src={dish.imagen} 
+                          alt={dish.nombre} 
+                          className="w-full h-full object-contain p-2 hover:scale-105 transition-transform duration-300 cursor-pointer"
+                          onClick={() => setSelectedImage(dish.imagen || null)}
+                        />
+                      ) : (
+                        <span className="font-dish font-bold text-[11px] text-primary uppercase tracking-wider text-center p-4">
+                          aca va a imagen
+                        </span>
+                      )}
+                      {isUnavailable && (
+                        <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] flex items-center justify-center">
+                          <span className="bg-red-500 text-white font-bold text-[10px] uppercase px-2.5 py-1 rounded-full tracking-wider shadow-md">
+                            Agotado
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    
+                    <div className="p-4 flex flex-col flex-1">
+                      <h4 className="font-dish font-bold text-dark text-[13px] leading-tight mb-1">
+                        {dish.nombre}
+                      </h4>
+                      {dish.descripcion && (
+                        <p className="text-[10px] text-gray-400 leading-tight mb-2 line-clamp-3">
+                          {dish.descripcion}
+                        </p>
+                      )}
+                      <div className="flex-1"></div>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className={`font-dish font-bold text-[15px] whitespace-nowrap ${isUnavailable ? 'text-gray-400 text-xs' : 'text-primary'}`}>
+                          {dish.precio}
+                        </span>
+                        {!isUnavailable && (
+                          <motion.button
+                            whileTap={{ scale: 0.8 }}
+                            onClick={() => addToCart(dish, cat.id === 'bebidas')}
+                            className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary transition-colors duration-200 shrink-0"
+                          >
+                            <Plus size={16} strokeWidth={3} />
+                          </motion.button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </section>
         ))}
@@ -425,6 +476,38 @@ export default function App() {
             <Star size={18} className="fill-white" />
             Reseña nuestra comida
           </motion.button>
+        </section>
+
+        {/* 📍 Mapa de Ubicación */}
+        <section className="mt-8 pt-6 border-t border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <MapPin className="text-primary" size={22} />
+            <h3 className="font-title text-primary text-2xl leading-none">Nuestra Ubicación</h3>
+          </div>
+          <p className="text-xs text-gray-500 mb-4">
+            Restaurant Cevicheria "LA CALETA" • ¡Te esperamos con el mejor sabor marino y selvático!
+          </p>
+          <div className="w-full h-60 rounded-3xl overflow-hidden shadow-md border border-gray-200">
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3958.513173716342!2d-76.7304817!3d-7.1821309!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91b06c743444cb8d%3A0x1efd9b7450ad5336!2sRestaurant%20Cevicheria%20%22%20LA%20CALETA%22!5e0!3m2!1ses!2spe!4v1784941102443!5m2!1ses!2spe"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={false}
+              loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
+              title="Ubicación La Caleta"
+            ></iframe>
+          </div>
+          <a
+            href={MAPS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center justify-center gap-2 w-full bg-primary/10 text-primary py-3 rounded-2xl font-bold text-xs hover:bg-primary/20 transition-colors shadow-sm"
+          >
+            <MapPin size={18} />
+            Ver ubicación en Google Maps
+          </a>
         </section>
 
         <footer className="mt-8 pt-8 pb-10 border-t border-gray-200 flex flex-col items-center justify-center">
@@ -508,7 +591,7 @@ export default function App() {
                   <X size={20} className="text-gray-400" />
                 </button>
               </div>
-              <div className="space-y-3 mb-8">
+              <div className="space-y-3 mb-6">
                 {cart.map(item => (
                   <div
                     key={`${item.nombre}-${item.precio}`}
@@ -536,12 +619,33 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <div className="border-t border-dashed border-gray-200 pt-6 mb-8">
-                <div className="flex justify-between items-center">
+
+              {/* Summary Breakdown */}
+              <div className="border-t border-dashed border-gray-200 pt-4 mb-4 space-y-2">
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Subtotal productos:</span>
+                  <span className="font-semibold text-dark">S/.{calculateSubtotal().toFixed(2)}</span>
+                </div>
+                {calculateEnvaseFee() > 0 && (
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <span>📦 Envase ({calculateDishesCount()} plato{calculateDishesCount() > 1 ? 's' : ''} x S/.1.00):</span>
+                    <span className="font-semibold text-dark">S/.{calculateEnvaseFee().toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                   <h3 className="font-dish text-xl font-bold text-dark">Total a pagar</h3>
                   <h3 className="font-dish text-xl font-bold text-primary">S/.{calculateTotal().toFixed(2)}</h3>
                 </div>
               </div>
+
+              {/* Delivery Note */}
+              <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3 mb-6 text-xs text-amber-900 flex items-start gap-2.5">
+                <span className="text-base shrink-0">🛵</span>
+                <p className="leading-snug">
+                  <strong>Nota de envío:</strong> Si tu dirección es cercana a nuestro local, el envío es <strong>GRATIS</strong>. Si la dirección es alejada, se aplicará un costo de envío adicional.
+                </p>
+              </div>
+
               <button
                 onClick={sendToWhatsApp}
                 className="w-full bg-[#25D366] text-white py-4 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-green-100 hover:scale-[1.02] transition-transform font-bold"
