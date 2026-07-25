@@ -20,7 +20,45 @@ const COPY_BOTON_CUMPLEANOS = "¡Celebra a lo grande! 🥳 Registra tu cumpleañ
 
 // Mapa de imágenes locales por defecto para platos conocidos (vacío por defecto para la plantilla)
 const LOCAL_IMAGES: Record<string, string> = {
-  // "Nombre del Plato": "nombre_imagen.jpg",
+  "Ceviche de Toyo": "/ceviche_toyo.png",
+  "Ceviche Mixto": "/ceviche_mixto.png",
+  "Ceviche Carretillero": "/ceviche_carretillero.png",
+  "Ceviche de Conchas Negras": "/ceviche_conchas_negras.png",
+  "Leche de Tigre Simple": "/leche_tigre_simple.png",
+  "Leche de Tigre Mega Especial": "/leche_tigre_mega_especial.png",
+  "Leche de Pantera": "/leche_pantera.png",
+  "Papa Huancaína + Ceviche": "/papa_huancaina_ceviche.png",
+  "Papa Rellena + Ceviche": "/papa_rellena_ceviche.png",
+  "Tortilla de Choclo + Ceviche": "/tortilla_choclo_ceviche.png",
+  "Causa Acevichada": "/causa_acevichada.png",
+  "Causa Montada": "/causa_montada.png",
+  "Causa con Lomo Saltado": "/causa_lomo_saltado.png",
+  "Canastitas Mixtas/Ceviche y Cecina": "/canastitas_mixtas.png",
+  "Fetuccini con Lomo Saltado": "/fetuccini_lomo_saltado.png",
+  "Lomo Saltado": "/lomo_saltado.png",
+  "Combo Caleta": "/combo_caleta.png",
+  "Dúos Marinos": "/duos_marinos.png",
+  "Ronda Marina": "/ronda_marina.png",
+  "Dúo Amazónico": "/duo_amazonico.png",
+  "Arroz con Marisco": "/arroz_marisco.png",
+  "Arroz con Langostino": "/arroz_langostino.png",
+  "Chaufa de Mariscos": "/chaufa_mariscos.png",
+  "Chaufa Regional": "/chaufa_regional.png",
+  "Chicharrón de Pescado": "/chicharron_pescado.png",
+  "Chicharrón Mixto": "/chicharron_mixto.png",
+  "Chicharrón de Pota": "/chicharron_pota.png",
+  "Chicharrón de Pollo": "/chicharron_pollo.png",
+  "Cabrilla Frita": "/cabrilla_frita.png",
+  "Jalea Simple": "/jalea_simple.png",
+  "Jalea Mixta": "/jalea_mixta.png",
+  "Sudado": "/sudado.png",
+  "Parihuela": "/parihuela.png",
+  "Chupe de Pescado": "/chupe_pescado.png",
+  "Chupe Mixto": "/chupe_mixto.png",
+  "Cuy Frito con Papas Guisadas": "/cuy_frito.png",
+  "Pato Guisado": "/pato_guisado.png",
+  "Arroz con Pato": "/arroz_con_pato.png",
+  "Agua mineral": "/agua_mineral.png",
 };
 
 interface Dish {
@@ -162,11 +200,23 @@ export default function App() {
     );
   };
 
+  const parsePrice = (priceStr: string | number): number => {
+    if (typeof priceStr === 'number') return priceStr;
+    if (!priceStr) return 0;
+    // Replace commas with dots, remove everything that is not a digit or dot
+    // If string is "S/. 25.00", removing 'S' and '/' and ' ' gives '. 25.00' or '25.00'
+    // Clean all non-digit and non-dot characters except when forming a valid float
+    const cleanStr = String(priceStr).replace(/,/g, '.');
+    const matches = cleanStr.match(/\d+(\.\d+)?/);
+    if (matches) {
+      return parseFloat(matches[0]) || 0;
+    }
+    return 0;
+  };
+
   const calculateSubtotal = () => {
     return cart.reduce((acc, item) => {
-      const cleanPrice = item.precio.replace(/^[^\d.]*/g, '').replace(/,/g, '.');
-      const num = parseFloat(cleanPrice) || 0;
-      return acc + num * item.cantidad;
+      return acc + parsePrice(item.precio) * item.cantidad;
     }, 0);
   };
 
@@ -412,12 +462,12 @@ export default function App() {
                     }`}
                   >
                     <div className="bg-primary/5 aspect-square flex items-center justify-center relative overflow-hidden border-b border-gray-100">
-                      {dish.imagen ? (
+                      { (dish.imagen || LOCAL_IMAGES[dish.nombre]) ? (
                         <img 
-                          src={dish.imagen} 
+                          src={dish.imagen || LOCAL_IMAGES[dish.nombre]} 
                           alt={dish.nombre} 
-                          className="w-full h-full object-contain p-2 hover:scale-105 transition-transform duration-300 cursor-pointer"
-                          onClick={() => setSelectedImage(dish.imagen || null)}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300 cursor-pointer"
+                          onClick={() => setSelectedImage(dish.imagen || LOCAL_IMAGES[dish.nombre] || null)}
                         />
                       ) : (
                         <span className="font-dish font-bold text-[11px] text-primary uppercase tracking-wider text-center p-4">
