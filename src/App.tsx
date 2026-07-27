@@ -10,7 +10,7 @@ import { DEFAULT_MENU_DATA } from './data/menuData';
 const RESTAURANTE_NAME = "La Caleta Restaurant Marisquería";
 const RESTAURANTE_SLOGAN = "El mejor sabor del mar y la selva";
 const WHATSAPP_NUMBER = "51988132003"; // Número de WhatsApp para recibir los pedidos
-const FACEBOOK_URL = "https://facebook.com/La Caleta Marisqueria";
+const FACEBOOK_URL = "https://www.facebook.com/Caletamarisqueria";
 const MAPS_URL = "https://maps.app.goo.gl/pad21wxLXwTA8Ygc7";
 const LOGO_FOOTER_PATH = "/header_logo.png";
 const BANNER_PATH = "/banner.jpg";
