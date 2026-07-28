@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 
 // Coloca aquí tu ID de Google Sheets (lo encuentras en la URL de tu hoja de cálculo)
-export const SHEET_ID = '1musJJODUp3NcWnPOHkkzbqWKsgHdjdNh1YUm56cxPPY';
+export const SHEET_ID = '1VfEAK3xsLajmQArPJeH-6arq_ha3djKZIM587o0s70k';
 
 export interface SheetDish {
   categoría: string;
@@ -15,29 +15,68 @@ export interface SheetCategory {
   nombre: string;
 }
 
+export interface SheetReview {
+  timestamp: string;
+  estrellasMozo: number;
+  estrellasComida: number;
+  comentario: string;
+}
+
+export interface SheetLoyalty {
+  timestamp: string;
+  nombre: string;
+  telefono: string;
+  fechaNacimiento: string;
+  distrito: string;
+  correo: string;
+}
+
 export const fetchSheetData = async <T>(sheetName: string): Promise<T[]> => {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-  
-  try {
-    const response = await fetch(url);
-    const csvText = await response.text();
-    
-    return new Promise((resolve, reject) => {
-      Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => resolve(results.data as T[]),
-        error: (error: any) => reject(error),
+  if (!SHEET_ID) return [];
+
+  // Mapeo de alternativas de nombres de pestañas (con o sin tilde)
+  const nameVariants: Record<string, string[]> = {
+    'Categorías': ['Categorías', 'Categorias', 'categorias', 'categorías'],
+    'Platos': ['Platos', 'platos'],
+    'Reseñas': ['Reseñas', 'Resenas', 'reseñas', 'resenas'],
+    'Fidelización': ['Fidelización', 'Fidelizacion', 'fidelización', 'fidelizacion', 'Cumpleaños', 'Cumpleanos']
+  };
+
+  const variants = nameVariants[sheetName] || [sheetName];
+
+  for (const variant of variants) {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(variant)}`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) continue;
+      
+      const csvText = await response.text();
+      // Si la pestaña no existe, Google Sheets retorna HTML o respuesta de error
+      if (csvText.includes('<!DOCTYPE html>') || csvText.includes('google-visualization-errors')) {
+        continue;
+      }
+
+      const parsed = await new Promise<T[]>((resolve, reject) => {
+        Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data as T[]),
+          error: (error: any) => reject(error),
+        });
       });
-    });
-  } catch (error) {
-    console.error(`Error fetching sheet ${sheetName}:`, error);
-    return [];
+
+      if (parsed && parsed.length > 0) {
+        return parsed;
+      }
+    } catch (error) {
+      console.warn(`Intento de carga para pestaña ${variant} no exitoso:`, error);
+    }
   }
+
+  return [];
 };
 
 // Configura aquí la URL de tu Google Apps Script Web App para poder enviar datos
-// Instrucciones: Crea un Apps Script, pega el código que te di, impleméntalo como Aplicación Web y pega la URL de ejecución aquí.
 export const WEB_APP_URL = '';
 
 export const submitSheetData = async (sheetName: string, data: any): Promise<boolean> => {
@@ -65,3 +104,4 @@ export const submitSheetData = async (sheetName: string, data: any): Promise<boo
     return false;
   }
 };
+

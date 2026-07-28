@@ -143,20 +143,42 @@ export default function App() {
           return;
         }
 
-        const formattedCategories: Category[] = cats.map(c => {
-          const defaultCat = DEFAULT_MENU_DATA.find(dc => dc.nombre.toLowerCase() === c.nombre.toLowerCase() || dc.id === c.nombre.toLowerCase().replace(/\s+/g, '-'));
+        const getCategoryName = (c: any) => (c['nombre'] || c['Nombre'] || c['categoría'] || c['categoria'] || c['Categoría'] || c['Categoria'] || '').toString().trim();
+        const getDishCategory = (d: any) => (d['categoría'] || d['categoria'] || d['Categoría'] || d['Categoria'] || '').toString().trim();
+        const getDishName = (d: any) => (d['nombre del plato'] || d['nombre'] || d['plato'] || d['Nombre del plato'] || d['Nombre'] || '').toString().trim();
+        const getDishDescription = (d: any) => (d['descripción'] || d['descripcion'] || d['Descripción'] || d['Descripcion'] || '').toString().trim();
+        const getDishPrice = (d: any) => (d['precio'] || d['Precio'] || '').toString().trim();
+        const getDishImageUrl = (d: any) => {
+          const raw = d['URL de imagen'] || d['url de imagen'] || d['URL de Imagen'] || d['Url de imagen'] || d['imagen'] || d['imagen_url'] || d['url_imagen'] || d['image'] || d['Image'] || '';
+          return typeof raw === 'string' ? raw.trim() : '';
+        };
+
+        const validCats = cats.map(c => getCategoryName(c)).filter(Boolean);
+
+        const formattedCategories: Category[] = validCats.map(catName => {
+          const defaultCat = DEFAULT_MENU_DATA.find(dc => dc.nombre.toLowerCase() === catName.toLowerCase() || dc.id === catName.toLowerCase().replace(/\s+/g, '-'));
+          
           const sheetItems = dishes
-            .filter(d => d.categoría === c.nombre)
+            .filter(d => getDishCategory(d).toLowerCase() === catName.toLowerCase())
             .map(d => {
-              const defaultDish = defaultCat?.items.find(di => di.nombre.toLowerCase() === d['nombre del plato'].toLowerCase() && di.descripcion === d.descripción);
-              const isGaseosa = d['nombre del plato'].toLowerCase().includes('gaseosa') && (d.descripción?.includes('3') || d.descripción?.includes('1') || d.descripción?.includes('1/2'));
-              const isRefresco = d['nombre del plato'].toLowerCase().includes('refresco') && (d.descripción?.includes('1') || d.descripción?.includes('1/2'));
+              const dishName = getDishName(d);
+              const dishDesc = getDishDescription(d);
+              const dishPrice = getDishPrice(d);
+              const customImgUrl = getDishImageUrl(d);
+
+              const defaultDish = defaultCat?.items.find(di => di.nombre.toLowerCase() === dishName.toLowerCase());
+              const isGaseosa = dishName.toLowerCase().includes('gaseosa') && (dishDesc.includes('3') || dishDesc.includes('1') || dishDesc.includes('1/2'));
+              const isRefresco = dishName.toLowerCase().includes('refresco') && (dishDesc.includes('1') || dishDesc.includes('1/2'));
+              
+              // Prioridad: URL de imagen definida en Google Sheets -> Imagen local por defecto -> Nulo
+              const finalImage = customImgUrl ? customImgUrl : (LOCAL_IMAGES[dishName] || defaultDish?.imagen || undefined);
+
               return {
-                nombre: d['nombre del plato'],
-                descripcion: d.descripción,
-                precio: d.precio,
-                imagen: LOCAL_IMAGES[d['nombre del plato']] || d['URL de imagen'] || null,
-                isDrink: c.nombre.toLowerCase().includes('bebida'),
+                nombre: dishName,
+                descripcion: dishDesc,
+                precio: dishPrice,
+                imagen: finalImage,
+                isDrink: catName.toLowerCase().includes('bebida'),
                 opciones: defaultDish?.opciones || (isGaseosa ? ["Inka Kola", "Coca Cola"] : isRefresco ? ["Chicha Morada", "Maracuyá"] : undefined)
               };
             });
@@ -165,8 +187,8 @@ export default function App() {
           const extraItems = (defaultCat?.items || []).filter(item => !existingKeys.has(item.nombre.toLowerCase() + (item.descripcion ? `_${item.descripcion}` : '')));
 
           return {
-            id: c.nombre.toLowerCase().replace(/\s+/g, '-'),
-            nombre: c.nombre,
+            id: catName.toLowerCase().replace(/\s+/g, '-'),
+            nombre: catName,
             items: [...sheetItems, ...extraItems]
           };
         });
@@ -330,7 +352,7 @@ export default function App() {
   const handleBirthdaySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmittingBirthday(true);
-    const success = await submitSheetData('Cumpleaños', {
+    const success = await submitSheetData('Fidelización', {
       timestamp: new Date().toLocaleString('es-PE'),
       nombre: birthdayData.nombre,
       telefono: birthdayData.telefono,
