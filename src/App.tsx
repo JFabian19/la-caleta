@@ -21,6 +21,9 @@ const COPY_BOTON_CUMPLEANOS = "¡Celebra a lo grande! 🥳 Registra tu cumpleañ
 // Mapa de imágenes locales por defecto para platos conocidos (vacío por defecto para la plantilla)
 const LOCAL_IMAGES: Record<string, string> = {
   "Ceviche de Toyo": "/ceviche_toyo.png",
+  "Ceviche de Caballa": "/ceviche_caballa.png",
+  "Ceviche de Palabritas": "/ceviche_palabritas.png",
+  "Ceviche langostino": "/ceviche_langostino.png",
   "Ceviche Mixto": "/ceviche_mixto.png",
   "Ceviche Carretillero": "/ceviche_carretillero.png",
   "Ceviche de Conchas Negras": "/ceviche_conchas_negras.png",
@@ -68,6 +71,7 @@ interface Dish {
   precio: string;
   isDrink?: boolean;
   disponible?: boolean;
+  opciones?: string[];
 }
 
 interface Category {
@@ -90,6 +94,8 @@ export default function App() {
   const [showSummary, setShowSummary] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedDishForOptions, setSelectedDishForOptions] = useState<{ dish: Dish; categoryIsDrink?: boolean } | null>(null);
+  const [selectedOption, setSelectedOption] = useState<string>('Inka Kola');
 
   // States for Birthday Form
   const [showBirthdayForm, setShowBirthdayForm] = useState(false);
@@ -137,19 +143,40 @@ export default function App() {
           return;
         }
 
-        const formattedCategories: Category[] = cats.map(c => ({
-          id: c.nombre.toLowerCase().replace(/\s+/g, '-'),
-          nombre: c.nombre,
-          items: dishes
+        const formattedCategories: Category[] = cats.map(c => {
+          const defaultCat = DEFAULT_MENU_DATA.find(dc => dc.nombre.toLowerCase() === c.nombre.toLowerCase() || dc.id === c.nombre.toLowerCase().replace(/\s+/g, '-'));
+          const sheetItems = dishes
             .filter(d => d.categoría === c.nombre)
-            .map(d => ({
-              nombre: d['nombre del plato'],
-              descripcion: d.descripción,
-              precio: d.precio,
-              imagen: LOCAL_IMAGES[d['nombre del plato']] || d['URL de imagen'] || null,
-              isDrink: c.nombre.toLowerCase().includes('bebida')
-            }))
-        }));
+            .map(d => {
+              const defaultDish = defaultCat?.items.find(di => di.nombre.toLowerCase() === d['nombre del plato'].toLowerCase() && di.descripcion === d.descripción);
+              const isGaseosa = d['nombre del plato'].toLowerCase().includes('gaseosa') && (d.descripción?.includes('3') || d.descripción?.includes('1') || d.descripción?.includes('1/2'));
+              const isRefresco = d['nombre del plato'].toLowerCase().includes('refresco') && (d.descripción?.includes('1') || d.descripción?.includes('1/2'));
+              return {
+                nombre: d['nombre del plato'],
+                descripcion: d.descripción,
+                precio: d.precio,
+                imagen: LOCAL_IMAGES[d['nombre del plato']] || d['URL de imagen'] || null,
+                isDrink: c.nombre.toLowerCase().includes('bebida'),
+                opciones: defaultDish?.opciones || (isGaseosa ? ["Inka Kola", "Coca Cola"] : isRefresco ? ["Chicha Morada", "Maracuyá"] : undefined)
+              };
+            });
+
+          const existingKeys = new Set(sheetItems.map(i => i.nombre.toLowerCase() + (i.descripcion ? `_${i.descripcion}` : '')));
+          const extraItems = (defaultCat?.items || []).filter(item => !existingKeys.has(item.nombre.toLowerCase() + (item.descripcion ? `_${item.descripcion}` : '')));
+
+          return {
+            id: c.nombre.toLowerCase().replace(/\s+/g, '-'),
+            nombre: c.nombre,
+            items: [...sheetItems, ...extraItems]
+          };
+        });
+
+        // Incluir categorías por defecto que no estén en el Sheet
+        DEFAULT_MENU_DATA.forEach(dc => {
+          if (!formattedCategories.some(fc => fc.nombre.toLowerCase() === dc.nombre.toLowerCase())) {
+            formattedCategories.push(dc);
+          }
+        });
 
         setCategories(formattedCategories);
         if (formattedCategories.length > 0) {
@@ -173,17 +200,57 @@ export default function App() {
 
   const addToCart = (dish: Dish, categoryIsDrink?: boolean) => {
     const isDrink = categoryIsDrink || dish.isDrink || false;
+    const isDishWithOptions =
+      (dish.opciones && dish.opciones.length > 0) ||
+      (dish.nombre.toLowerCase().includes('gaseosa') &&
+        dish.descripcion &&
+        (dish.descripcion.includes('3') || dish.descripcion.includes('1') || dish.descripcion.includes('1/2'))) ||
+      (dish.nombre.toLowerCase().includes('refresco') &&
+        dish.descripcion &&
+        (dish.descripcion.includes('1') || dish.descripcion.includes('1/2')));
+
+    if (isDishWithOptions) {
+      const defaultOpts = dish.nombre.toLowerCase().includes('refresco') ? ['Chicha Morada', 'Maracuyá'] : ['Inka Kola', 'Coca Cola'];
+      const opts = dish.opciones || defaultOpts;
+      setSelectedDishForOptions({ dish: { ...dish, opciones: opts }, categoryIsDrink });
+      setSelectedOption(opts[0]);
+      return;
+    }
+
+    const itemDisplayName = dish.nombre === 'Gaseosa' && dish.descripcion ? `${dish.nombre} ${dish.descripcion}` : dish.nombre;
+
     setCart(prev => {
-      const existing = prev.find(i => i.nombre === dish.nombre && i.precio === dish.precio);
+      const existing = prev.find(i => i.nombre === itemDisplayName && i.precio === dish.precio);
       if (existing) {
         return prev.map(i =>
-          (i.nombre === dish.nombre && i.precio === dish.precio)
+          (i.nombre === itemDisplayName && i.precio === dish.precio)
             ? { ...i, cantidad: i.cantidad + 1 }
             : i
         );
       }
-      return [...prev, { nombre: dish.nombre, precio: dish.precio, cantidad: 1, isDrink }];
+      return [...prev, { nombre: itemDisplayName, precio: dish.precio, cantidad: 1, isDrink }];
     });
+  };
+
+  const confirmAddToCartWithOptions = () => {
+    if (!selectedDishForOptions) return;
+    const { dish, categoryIsDrink } = selectedDishForOptions;
+    const isDrink = categoryIsDrink || dish.isDrink || false;
+    const itemDisplayName = `${dish.nombre}${dish.descripcion ? ` ${dish.descripcion}` : ''} - ${selectedOption}`;
+
+    setCart(prev => {
+      const existing = prev.find(i => i.nombre === itemDisplayName && i.precio === dish.precio);
+      if (existing) {
+        return prev.map(i =>
+          (i.nombre === itemDisplayName && i.precio === dish.precio)
+            ? { ...i, cantidad: i.cantidad + 1 }
+            : i
+        );
+      }
+      return [...prev, { nombre: itemDisplayName, precio: dish.precio, cantidad: 1, isDrink }];
+    });
+
+    setSelectedDishForOptions(null);
   };
 
   const updateQuantity = (nombre: string, precio: string, delta: number) => {
@@ -890,6 +957,83 @@ export default function App() {
                   </button>
                 </form>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🥤 Modal para elegir opción de Gaseosa (Inka Kola / Coca Cola) */}
+      <AnimatePresence>
+        {selectedDishForOptions && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedDishForOptions(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedDishForOptions(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-gray-100 p-2 rounded-full transition-colors"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="text-center mb-5">
+                <div className="w-14 h-14 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
+                  🥤
+                </div>
+                <h3 className="font-dish font-bold text-lg text-dark">
+                  {selectedDishForOptions.dish.nombre} {selectedDishForOptions.dish.descripcion}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">Elige tu sabor preferido ({selectedDishForOptions.dish.precio})</p>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                {(selectedDishForOptions.dish.opciones || ["Inka Kola", "Coca Cola"]).map((op) => (
+                  <button
+                    key={op}
+                    type="button"
+                    onClick={() => setSelectedOption(op)}
+                    className={`w-full p-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-between transition-all duration-200 ${
+                      selectedOption === op
+                        ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-300 bg-gray-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg">
+                        {op.toLowerCase().includes('inka') ? '🟡' :
+                         op.toLowerCase().includes('coca') ? '🔴' :
+                         op.toLowerCase().includes('chicha') ? '🟣' :
+                         op.toLowerCase().includes('maracuya') || op.toLowerCase().includes('maracuyá') ? '🟡' : '🍹'}
+                      </span>
+                      <span>{op}</span>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      selectedOption === op ? 'border-primary bg-primary' : 'border-gray-300'
+                    }`}>
+                      {selectedOption === op && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={confirmAddToCartWithOptions}
+                className="w-full bg-primary text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+                Agregar al pedido
+              </motion.button>
             </motion.div>
           </motion.div>
         )}

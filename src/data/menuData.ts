@@ -5,6 +5,7 @@ export interface Dish {
   precio: string;
   isDrink?: boolean;
   disponible?: boolean;
+  opciones?: string[];
 }
 
 export interface Category {
@@ -19,6 +20,9 @@ export const DEFAULT_MENU_DATA: Category[] = [
     nombre: "Ceviches y Causas",
     items: [
       { nombre: "Ceviche de Toyo", descripcion: "", precio: "S/. 25.00", imagen: "/ceviche_toyo.png" },
+      { nombre: "Ceviche de Caballa", descripcion: "", precio: "S/. 20.00", imagen: "/ceviche_caballa.png" },
+      { nombre: "Ceviche de Palabritas", descripcion: "", precio: "S/. 20.00", imagen: "/ceviche_palabritas.png" },
+      { nombre: "Ceviche langostino", descripcion: "", precio: "S/. 40.00", imagen: "/ceviche_langostino.png" },
       { nombre: "Ceviche Mixto", descripcion: "", precio: "S/. 30.00", imagen: "/ceviche_mixto.png" },
       { nombre: "Ceviche Carretillero", descripcion: "", precio: "S/. 30.00", imagen: "/ceviche_carretillero.png" },
       { nombre: "Ceviche de Conchas Negras", descripcion: "", precio: "S/. 40.00", imagen: "/ceviche_conchas_negras.png" },
@@ -105,15 +109,15 @@ export const DEFAULT_MENU_DATA: Category[] = [
     id: "bebidas",
     nombre: "Bebidas",
     items: [
-      { nombre: "Refresco de chicha o maracuyá", descripcion: "1 litro", precio: "S/. 15.00", imagen: "/bebidas/chicha_jarra.png", isDrink: true, disponible: true },
-      { nombre: "Refresco de chicha o maracuyá", descripcion: "1/2 litro", precio: "S/. 8.00", imagen: "/bebidas/chicha_jarra.png", isDrink: true, disponible: true },
+      { nombre: "Refresco de chicha o maracuyá", descripcion: "1 litro", precio: "S/. 15.00", imagen: "/bebidas/chicha_jarra.png", isDrink: true, disponible: true, opciones: ["Chicha Morada", "Maracuyá"] },
+      { nombre: "Refresco de chicha o maracuyá", descripcion: "1/2 litro", precio: "S/. 8.00", imagen: "/bebidas/chicha_jarra.png", isDrink: true, disponible: true, opciones: ["Chicha Morada", "Maracuyá"] },
       { nombre: "Chicha morada frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
       { nombre: "Maracuyá frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
       { nombre: "Limonada frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
-      { nombre: "Gaseosa", descripcion: "3 litros", precio: "S/. 18.00", imagen: "/bebidas/gaseosa_3l.png", isDrink: true, disponible: true },
-      { nombre: "Gaseosa", descripcion: "1/2 litro", precio: "S/. 10.00", imagen: "/bebidas/gaseosa_1l.png", isDrink: true, disponible: true },
+      { nombre: "Gaseosa", descripcion: "3 litros", precio: "S/. 18.00", imagen: "/bebidas/gaseosa_3l.png", isDrink: true, disponible: true, opciones: ["Inka Kola", "Coca Cola"] },
+      { nombre: "Gaseosa", descripcion: "1 litro", precio: "S/. 10.00", imagen: "/bebidas/gaseosa_1l.png", isDrink: true, disponible: true, opciones: ["Inka Kola", "Coca Cola"] },
       { nombre: "Gaseosa gordita", descripcion: "", precio: "S/. 6.00", imagen: "/bebidas/gaseosa_gordita.png", isDrink: true, disponible: true },
-      { nombre: "Gaseosa", descripcion: "1/2 litro", precio: "S/. 5.00", imagen: "/bebidas/gaseosa_medio_litro.png", isDrink: true, disponible: true },
+      { nombre: "Gaseosa", descripcion: "1/2 litro", precio: "S/. 5.00", imagen: "/bebidas/gaseosa_medio_litro.png", isDrink: true, disponible: true, opciones: ["Inka Kola", "Coca Cola"] },
       { nombre: "Agua mineral", descripcion: "", precio: "S/. 4.00", imagen: "/agua_mineral.png", isDrink: true, disponible: true },
       { nombre: "Cerveza Corona", descripcion: "", precio: "S/. 8.00", imagen: "/bebidas/cerveza_corona.png", isDrink: true, disponible: true },
       { nombre: "Cerveza Cristal", descripcion: "", precio: "S/. 10.00", imagen: "/bebidas/cerveza_cristal.png", isDrink: true, disponible: true },
