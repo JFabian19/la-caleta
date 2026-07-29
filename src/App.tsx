@@ -47,6 +47,9 @@ const LOCAL_IMAGES: Record<string, string> = {
   "Arroz con Langostino": "/arroz_langostino.webp",
   "Chaufa de Mariscos": "/chaufa_mariscos.webp",
   "Chaufa Regional": "/chaufa_regional.webp",
+  "Tacu tacu con salsa mariscos": "/tacu_tacu_salsa_mariscos.webp",
+  "Tacu tacu con lomo saltado": "/tacu_tacu_lomo_saltado.webp",
+  "Chicha de jora": "/bebidas/chicha_jora.webp",
   "Chicharrón de Pescado": "/chicharron_pescado.webp",
   "Chicharrón Mixto": "/chicharron_mixto.webp",
   "Chicharrón de Pota": "/chicharron_pota.webp",
@@ -96,6 +99,7 @@ export default function App() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedDishForOptions, setSelectedDishForOptions] = useState<{ dish: Dish; categoryIsDrink?: boolean } | null>(null);
   const [selectedOption, setSelectedOption] = useState<string>('Inka Kola');
+  const [selectedSize, setSelectedSize] = useState<string>('1/2 Litro');
 
   // States for Birthday Form
   const [showBirthdayForm, setShowBirthdayForm] = useState(false);
@@ -143,10 +147,11 @@ export default function App() {
           return;
         }
 
+        const normalizeStr = (str: string) => str.toLowerCase().replace(/\s+/g, ' ').trim();
         const getCategoryName = (c: any) => (c['nombre'] || c['Nombre'] || c['categoría'] || c['categoria'] || c['Categoría'] || c['Categoria'] || '').toString().trim();
         const getDishCategory = (d: any) => (d['categoría'] || d['categoria'] || d['Categoría'] || d['Categoria'] || '').toString().trim();
-        const getDishName = (d: any) => (d['nombre del plato'] || d['nombre'] || d['plato'] || d['Nombre del plato'] || d['Nombre'] || '').toString().trim();
-        const getDishDescription = (d: any) => (d['descripción'] || d['descripcion'] || d['Descripción'] || d['Descripcion'] || '').toString().trim();
+        const getDishName = (d: any) => (d['nombre del plato'] || d['nombre'] || d['plato'] || d['Nombre del plato'] || d['Nombre'] || '').toString().replace(/\s+/g, ' ').trim();
+        const getDishDescription = (d: any) => (d['descripción'] || d['descripcion'] || d['Descripción'] || d['Descripcion'] || '').toString().replace(/\s+/g, ' ').trim();
         const getDishPrice = (d: any) => (d['precio'] || d['Precio'] || '').toString().trim();
         const getDishImageUrl = (d: any) => {
           const raw = d['URL de imagen'] || d['url de imagen'] || d['URL de Imagen'] || d['Url de imagen'] || d['imagen'] || d['imagen_url'] || d['url_imagen'] || d['image'] || d['Image'] || '';
@@ -156,17 +161,17 @@ export default function App() {
         const validCats = cats.map(c => getCategoryName(c)).filter(Boolean);
 
         const formattedCategories: Category[] = validCats.map(catName => {
-          const defaultCat = DEFAULT_MENU_DATA.find(dc => dc.nombre.toLowerCase() === catName.toLowerCase() || dc.id === catName.toLowerCase().replace(/\s+/g, '-'));
+          const defaultCat = DEFAULT_MENU_DATA.find(dc => normalizeStr(dc.nombre) === normalizeStr(catName) || dc.id === normalizeStr(catName).replace(/\s+/g, '-'));
           
           const sheetItems = dishes
-            .filter(d => getDishCategory(d).toLowerCase() === catName.toLowerCase())
+            .filter(d => normalizeStr(getDishCategory(d)) === normalizeStr(catName))
             .map(d => {
               const dishName = getDishName(d);
               const dishDesc = getDishDescription(d);
               const dishPrice = getDishPrice(d);
               const customImgUrl = getDishImageUrl(d);
 
-              const defaultDish = defaultCat?.items.find(di => di.nombre.toLowerCase() === dishName.toLowerCase());
+              const defaultDish = defaultCat?.items.find(di => normalizeStr(di.nombre) === normalizeStr(dishName));
               const isGaseosa = dishName.toLowerCase().includes('gaseosa') && (dishDesc.includes('3') || dishDesc.includes('1') || dishDesc.includes('1/2'));
               const isRefresco = dishName.toLowerCase().includes('refresco') && (dishDesc.includes('1') || dishDesc.includes('1/2'));
               
@@ -183,8 +188,8 @@ export default function App() {
               };
             });
 
-          const existingKeys = new Set(sheetItems.map(i => i.nombre.toLowerCase() + (i.descripcion ? `_${i.descripcion}` : '')));
-          const extraItems = (defaultCat?.items || []).filter(item => !existingKeys.has(item.nombre.toLowerCase() + (item.descripcion ? `_${item.descripcion}` : '')));
+          const existingKeys = new Set(sheetItems.map(i => normalizeStr(i.nombre) + (i.descripcion ? `_${normalizeStr(i.descripcion)}` : '')));
+          const extraItems = (defaultCat?.items || []).filter(item => !existingKeys.has(normalizeStr(item.nombre) + (item.descripcion ? `_${normalizeStr(item.descripcion)}` : '')));
 
           return {
             id: catName.toLowerCase().replace(/\s+/g, '-'),
@@ -227,15 +232,14 @@ export default function App() {
       (dish.nombre.toLowerCase().includes('gaseosa') &&
         dish.descripcion &&
         (dish.descripcion.includes('3') || dish.descripcion.includes('1') || dish.descripcion.includes('1/2'))) ||
-      (dish.nombre.toLowerCase().includes('refresco') &&
-        dish.descripcion &&
-        (dish.descripcion.includes('1') || dish.descripcion.includes('1/2')));
+      dish.nombre.toLowerCase().includes('refresco');
 
     if (isDishWithOptions) {
       const defaultOpts = dish.nombre.toLowerCase().includes('refresco') ? ['Chicha Morada', 'Maracuyá'] : ['Inka Kola', 'Coca Cola'];
-      const opts = dish.opciones || defaultOpts;
+      const opts = dish.opciones && dish.opciones.length > 0 ? dish.opciones : defaultOpts;
       setSelectedDishForOptions({ dish: { ...dish, opciones: opts }, categoryIsDrink });
       setSelectedOption(opts[0]);
+      setSelectedSize('1/2 Litro');
       return;
     }
 
@@ -258,18 +262,26 @@ export default function App() {
     if (!selectedDishForOptions) return;
     const { dish, categoryIsDrink } = selectedDishForOptions;
     const isDrink = categoryIsDrink || dish.isDrink || false;
-    const itemDisplayName = `${dish.nombre}${dish.descripcion ? ` ${dish.descripcion}` : ''} - ${selectedOption}`;
+    const isRefresco = dish.nombre.toLowerCase().includes('refresco');
+
+    let itemDisplayName = `${dish.nombre}${dish.descripcion ? ` ${dish.descripcion}` : ''} - ${selectedOption}`;
+    let finalPrice = dish.precio;
+
+    if (isRefresco) {
+      itemDisplayName = `Refresco de ${selectedOption} (${selectedSize})`;
+      finalPrice = selectedSize === '1 Litro' ? 'S/. 15.00' : 'S/. 8.00';
+    }
 
     setCart(prev => {
-      const existing = prev.find(i => i.nombre === itemDisplayName && i.precio === dish.precio);
+      const existing = prev.find(i => i.nombre === itemDisplayName && i.precio === finalPrice);
       if (existing) {
         return prev.map(i =>
-          (i.nombre === itemDisplayName && i.precio === dish.precio)
+          (i.nombre === itemDisplayName && i.precio === finalPrice)
             ? { ...i, cantidad: i.cantidad + 1 }
             : i
         );
       }
-      return [...prev, { nombre: itemDisplayName, precio: dish.precio, cantidad: 1, isDrink }];
+      return [...prev, { nombre: itemDisplayName, precio: finalPrice, cantidad: 1, isDrink }];
     });
 
     setSelectedDishForOptions(null);
@@ -1013,40 +1025,89 @@ export default function App() {
                   🥤
                 </div>
                 <h3 className="font-dish font-bold text-lg text-dark">
-                  {selectedDishForOptions.dish.nombre} {selectedDishForOptions.dish.descripcion}
+                  {selectedDishForOptions.dish.nombre}
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">Elige tu sabor preferido ({selectedDishForOptions.dish.precio})</p>
+                <p className="text-xs text-gray-500 mt-1">Personaliza tu bebida</p>
               </div>
 
-              <div className="space-y-3 mb-6">
-                {(selectedDishForOptions.dish.opciones || ["Inka Kola", "Coca Cola"]).map((op) => (
-                  <button
-                    key={op}
-                    type="button"
-                    onClick={() => setSelectedOption(op)}
-                    className={`w-full p-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-between transition-all duration-200 ${
-                      selectedOption === op
-                        ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                        : 'border-gray-200 text-gray-700 hover:border-gray-300 bg-gray-50/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">
-                        {op.toLowerCase().includes('inka') ? '🟡' :
-                         op.toLowerCase().includes('coca') ? '🔴' :
-                         op.toLowerCase().includes('chicha') ? '🟣' :
-                         op.toLowerCase().includes('maracuya') || op.toLowerCase().includes('maracuyá') ? '🟡' : '🍹'}
-                      </span>
-                      <span>{op}</span>
+              {selectedDishForOptions.dish.nombre.toLowerCase().includes('refresco') ? (
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-2 text-left">1. Selecciona el sabor</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Chicha Morada', 'Maracuyá'].map((sabor) => (
+                        <button
+                          key={sabor}
+                          type="button"
+                          onClick={() => setSelectedOption(sabor)}
+                          className={`p-3 rounded-2xl border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                            selectedOption === sabor
+                              ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                              : 'border-gray-200 text-gray-700 hover:border-gray-300 bg-gray-50/50'
+                          }`}
+                        >
+                          <span>{sabor.includes('Chicha') ? '🟣' : '🟡'}</span>
+                          <span>{sabor}</span>
+                        </button>
+                      ))}
                     </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedOption === op ? 'border-primary bg-primary' : 'border-gray-300'
-                    }`}>
-                      {selectedOption === op && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-2 text-left">2. Selecciona el tamaño</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { size: '1/2 Litro', price: 'S/. 8.00' },
+                        { size: '1 Litro', price: 'S/. 15.00' }
+                      ].map(({ size, price }) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setSelectedSize(size)}
+                          className={`p-3 rounded-2xl border-2 font-bold text-xs flex flex-col items-center justify-center transition-all ${
+                            selectedSize === size
+                              ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                              : 'border-gray-200 text-gray-700 hover:border-gray-300 bg-gray-50/50'
+                          }`}
+                        >
+                          <span>{size}</span>
+                          <span className="text-[11px] font-semibold text-primary mt-0.5">{price}</span>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
-              </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 mb-6">
+                  {(selectedDishForOptions.dish.opciones || ["Inka Kola", "Coca Cola"]).map((op) => (
+                    <button
+                      key={op}
+                      type="button"
+                      onClick={() => setSelectedOption(op)}
+                      className={`w-full p-4 rounded-2xl border-2 font-bold text-sm flex items-center justify-between transition-all duration-200 ${
+                        selectedOption === op
+                          ? 'border-primary bg-primary/5 text-primary shadow-sm'
+                          : 'border-gray-200 text-gray-700 hover:border-gray-300 bg-gray-50/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">
+                          {op.toLowerCase().includes('inka') ? '🟡' :
+                           op.toLowerCase().includes('coca') ? '🔴' :
+                           op.toLowerCase().includes('chicha') ? '🟣' :
+                           op.toLowerCase().includes('maracuya') || op.toLowerCase().includes('maracuyá') ? '🟡' : '🍹'}
+                        </span>
+                        <span>{op}</span>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedOption === op ? 'border-primary bg-primary' : 'border-gray-300'
+                      }`}>
+                        {selectedOption === op && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <motion.button
                 whileTap={{ scale: 0.96 }}
@@ -1054,7 +1115,11 @@ export default function App() {
                 className="w-full bg-primary text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
               >
                 <Plus size={18} strokeWidth={2.5} />
-                Agregar al pedido
+                Agregar al pedido • {
+                  selectedDishForOptions.dish.nombre.toLowerCase().includes('refresco')
+                    ? (selectedSize === '1 Litro' ? 'S/. 15.00' : 'S/. 8.00')
+                    : selectedDishForOptions.dish.precio
+                }
               </motion.button>
             </motion.div>
           </motion.div>

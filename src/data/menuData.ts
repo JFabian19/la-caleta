@@ -63,6 +63,8 @@ export const DEFAULT_MENU_DATA: Category[] = [
       { nombre: "Arroz con Marisco", descripcion: "", precio: "S/. 25.00", imagen: "/arroz_marisco.webp" },
       { nombre: "Arroz con Langostino", descripcion: "", precio: "S/. 40.00", imagen: "/arroz_langostino.webp" },
       { nombre: "Chaufa de Mariscos", descripcion: "", precio: "S/. 25.00", imagen: "/chaufa_mariscos.webp" },
+      { nombre: "Tacu tacu con salsa mariscos", descripcion: "", precio: "S/. 25.00", imagen: "/tacu_tacu_salsa_mariscos.webp" },
+      { nombre: "Tacu tacu con lomo saltado", descripcion: "", precio: "S/. 25.00", imagen: "/tacu_tacu_lomo_saltado.webp" },
       { nombre: "Chaufa Regional", descripcion: "", precio: "S/. 25.00", imagen: "/chaufa_regional.webp" }
     ]
   },
@@ -99,21 +101,18 @@ export const DEFAULT_MENU_DATA: Category[] = [
     id: "sabados-y-domingos",
     nombre: "Sábados y Domingos",
     items: [
-      { nombre: "Cuy Frito con Papas Guisadas", descripcion: "", precio: "S/. 25.00", imagen: "/cuy_frito.webp" },
-      { nombre: "Carne Seca con ...", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", disponible: false },
-      { nombre: "Pato Guisado", descripcion: "", precio: "S/. 20.00", imagen: "/pato_guisado.webp" },
-      { nombre: "Arroz con Pato", descripcion: "", precio: "S/. 20.00", imagen: "/arroz_con_pato.webp" }
+      { nombre: "Cuy Frito con Papas Guisadas", descripcion: "", precio: "S/. 25.00", imagen: "/cuy_frito.webp" }
     ]
   },
   {
     id: "bebidas",
     nombre: "Bebidas",
     items: [
-      { nombre: "Refresco de chicha o maracuyá", descripcion: "1 litro", precio: "S/. 15.00", imagen: "/bebidas/chicha_jarra.webp", isDrink: true, disponible: true, opciones: ["Chicha Morada", "Maracuyá"] },
-      { nombre: "Refresco de chicha o maracuyá", descripcion: "1/2 litro", precio: "S/. 8.00", imagen: "/bebidas/chicha_jarra.webp", isDrink: true, disponible: true, opciones: ["Chicha Morada", "Maracuyá"] },
+      { nombre: "Refresco de chicha o maracuyá", descripcion: "1/2 o 1 litro", precio: "S/. 8.00", imagen: "/bebidas/chicha_jarra.webp", isDrink: true, disponible: true, opciones: ["Chicha Morada", "Maracuyá"] },
       { nombre: "Chicha morada frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
       { nombre: "Maracuyá frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
       { nombre: "Limonada frozen", descripcion: "NO DISPONIBLE", precio: "No disponible", imagen: "", isDrink: true, disponible: false },
+      { nombre: "Chicha de jora", descripcion: "1 litro", precio: "S/. 10.00", imagen: "/bebidas/chicha_jora.webp", isDrink: true, disponible: true },
       { nombre: "Gaseosa", descripcion: "3 litros", precio: "S/. 18.00", imagen: "/bebidas/gaseosa_3l.webp", isDrink: true, disponible: true, opciones: ["Inka Kola", "Coca Cola"] },
       { nombre: "Gaseosa", descripcion: "1 litro", precio: "S/. 10.00", imagen: "/bebidas/gaseosa_1l.webp", isDrink: true, disponible: true, opciones: ["Inka Kola", "Coca Cola"] },
       { nombre: "Gaseosa gordita", descripcion: "", precio: "S/. 6.00", imagen: "/bebidas/gaseosa_gordita.webp", isDrink: true, disponible: true },
