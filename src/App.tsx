@@ -157,6 +157,10 @@ export default function App() {
           const raw = d['URL de imagen'] || d['url de imagen'] || d['URL de Imagen'] || d['Url de imagen'] || d['imagen'] || d['imagen_url'] || d['url_imagen'] || d['image'] || d['Image'] || '';
           return typeof raw === 'string' ? raw.trim() : '';
         };
+        const getDishDisponible = (d: any) => {
+          const val = (d['disponible'] || d['Disponible'] || d['DISPONIBLE'] || 'si').toString().trim().toLowerCase();
+          return val !== 'no' && val !== 'false' && val !== '0' && val !== 'n';
+        };
 
         const validCats = cats.map(c => getCategoryName(c)).filter(Boolean);
 
@@ -164,7 +168,7 @@ export default function App() {
           const defaultCat = DEFAULT_MENU_DATA.find(dc => normalizeStr(dc.nombre) === normalizeStr(catName) || dc.id === normalizeStr(catName).replace(/\s+/g, '-'));
           
           const sheetItems = dishes
-            .filter(d => normalizeStr(getDishCategory(d)) === normalizeStr(catName))
+            .filter(d => normalizeStr(getDishCategory(d)) === normalizeStr(catName) && getDishDisponible(d))
             .map(d => {
               const dishName = getDishName(d);
               const dishDesc = getDishDescription(d);

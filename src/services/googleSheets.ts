@@ -9,6 +9,7 @@ export interface SheetDish {
   descripción: string;
   precio: string;
   'URL de imagen': string;
+  disponible?: string;
 }
 
 export interface SheetCategory {
