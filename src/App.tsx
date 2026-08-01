@@ -192,13 +192,10 @@ export default function App() {
               };
             });
 
-          const existingKeys = new Set(sheetItems.map(i => normalizeStr(i.nombre) + (i.descripcion ? `_${normalizeStr(i.descripcion)}` : '')));
-          const extraItems = (defaultCat?.items || []).filter(item => !existingKeys.has(normalizeStr(item.nombre) + (item.descripcion ? `_${normalizeStr(item.descripcion)}` : '')));
-
           return {
             id: catName.toLowerCase().replace(/\s+/g, '-'),
             nombre: catName,
-            items: [...sheetItems, ...extraItems]
+            items: sheetItems
           };
         });
 
