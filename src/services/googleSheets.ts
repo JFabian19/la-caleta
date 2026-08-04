@@ -78,7 +78,7 @@ export const fetchSheetData = async <T>(sheetName: string): Promise<T[]> => {
 };
 
 // Configura aquí la URL de tu Google Apps Script Web App para poder enviar datos
-export const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxVL5HWpvyn2UPRdLMgwcJISDQ8apWvGr42uM86AXzqw7OhvbVU9dOJCoR1e7mdyVXn/exec';
+export const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbztWIlPPU48pzGo9jY52izMTDTDo-pCZTtikF1bWJjzqBUHfnrWJXTwoAPfOuAHbOE/exec';
 
 export const submitSheetData = async (sheetName: string, data: any): Promise<boolean> => {
   if (!WEB_APP_URL) {
@@ -91,7 +91,7 @@ export const submitSheetData = async (sheetName: string, data: any): Promise<boo
       method: 'POST',
       mode: 'no-cors', // Importante para evitar problemas de CORS con Apps Script
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain;charset=utf-8',
       },
       body: JSON.stringify({
         sheetName,
